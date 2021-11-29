@@ -38,7 +38,12 @@ pub fn parse(
           quote!(::std::vec![]),
         ),
         Field::FieldOption { .. } | Field::FieldVec { .. } => {
-          unimplemented!();
+          unimplemented!(
+            "{}::{} {:?} inside FieldVec",
+            name,
+            field.renamed_label_without_namespace(),
+            data_type
+          );
         }
         simple_type => {
           let type_token: TokenStream = simple_type.into();
@@ -178,7 +183,13 @@ pub fn parse(
       };
 
       let visit_sub = |sub_type: Box<Field>, action: TokenStream| match *sub_type {
-        Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!(
+          "{}::{} {:?} inside {:?}",
+          name,
+          field.renamed_label_without_namespace(),
+          *sub_type,
+          field.get_type()
+        ),
         Field::FieldStruct { struct_name } => visit_struct(struct_name, action),
         simple_type => visit_simple(simple_type, action),
       };
@@ -268,7 +279,13 @@ pub fn parse(
       };
 
       let visit_sub = |sub_type: Box<Field>, action: TokenStream| match *sub_type {
-        Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldOption { .. } | Field::FieldVec { .. } => unimplemented!(
+          "{}::{} attribute {:?} inside {:?}",
+          name,
+          field.renamed_label_without_namespace(),
+          *sub_type,
+          field.get_type()
+        ),
         Field::FieldStruct { struct_name } => visit_struct(struct_name, action),
         simple_type => visit_simple(simple_type, action),
       };
@@ -278,7 +295,11 @@ pub fn parse(
         Field::FieldOption { data_type } => {
           visit_sub(data_type, quote! { = ::std::option::Option::Some(value) })
         }
-        Field::FieldVec { .. } => unimplemented!(),
+        Field::FieldVec { .. } => unimplemented!(
+          "{}::{} attribute Vec",
+          name,
+          field.renamed_label_without_namespace()
+        ),
         Field::FieldStruct { struct_name } => visit_struct(struct_name, quote! { = value }),
         simple_type => visit_simple(simple_type, quote! { = value }),
       }
